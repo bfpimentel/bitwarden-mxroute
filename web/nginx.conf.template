@@ -2,6 +2,8 @@ server {
     listen 6124;
     server_name localhost;
 
+    resolver 127.0.0.11 auto;
+
     location / {
         root /usr/share/nginx/html;
         index index.html index.htm;
