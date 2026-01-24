@@ -65,3 +65,21 @@ def get(domain):
         return jsonify(data["data"]), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/delete/<email>", methods=["DELETE"])
+def delete(email):
+    try:
+        alias, domain = email.split("@")
+    except ValueError:
+        return jsonify({"error": "Invalid email format."}), 400
+
+    endpoint, headers = build_request(domain)
+
+    try:
+        response = requests.delete(f"{endpoint}/{alias}", headers=headers)
+        response.raise_for_status()
+
+        return jsonify({"message": "Deleted."}), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500

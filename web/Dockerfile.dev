@@ -1,0 +1,13 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY web/package*.json ./
+
+RUN npm install
+
+COPY web/ .
+
+EXPOSE 6124
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "6124"]
