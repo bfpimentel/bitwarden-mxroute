@@ -1,9 +1,9 @@
 services:
-  mxroute-bitwarden:
-    container_name: mxroute-bitwarden
+  mxroute-bitwarden-server:
+    container_name: mxroute-bitwarden-server
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: server/Dockerfile.dev
     ports:
       - "6123:6123"
-    env_file: .env.example
+    env_file: .env.dev

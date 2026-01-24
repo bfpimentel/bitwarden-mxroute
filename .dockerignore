@@ -1,8 +1,0 @@
-__pycache__
-
-.venv
-.env
-.git
-
-README.md
-docker-compose.example.yml
