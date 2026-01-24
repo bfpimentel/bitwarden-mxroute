@@ -1,14 +1,14 @@
 services:
-  mxroute-bitwarden-server:
-    container_name: mxroute-bitwarden-server
+  bitwarden-mxroute-server:
+    container_name: bitwarden-mxroute-server
     build:
       context: .
       dockerfile: server/Dockerfile.dev
     ports:
       - "6123:6123"
     env_file: .env.dev
-  mxroute-bitwarden-web:
-    container_name: mxroute-bitwarden-web
+  bitwarden-mxroute-web:
+    container_name: bitwarden-mxroute-web
     build:
       context: .
       dockerfile: web/Dockerfile.dev
@@ -16,4 +16,4 @@ services:
       - "6124:6124"
     env_file: .env.dev
     depends_on:
-      - mxroute-bitwarden-server
+      - bitwarden-mxroute-server

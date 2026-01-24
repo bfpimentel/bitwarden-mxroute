@@ -1,15 +1,15 @@
 services:
-  mxroute-bitwarden-server:
-    container_name: mxroute-bitwarden-server
-    image: ghcr.io/bfpimentel/mxroute-bitwarden-server:latest
+  bitwarden-mxroute-server:
+    container_name: bitwarden-mxroute-server
+    image: ghcr.io/bfpimentel/bitwarden-mxroute-server:latest
     ports:
       - "6123:6123"
     env_file: .env.example
-  mxroute-bitwarden-web:
-    container_name: mxroute-bitwarden-web
-    image: ghcr.io/bfpimentel/mxroute-bitwarden-web:latest
+  bitwarden-mxroute-web:
+    container_name: bitwarden-mxroute-web
+    image: ghcr.io/bfpimentel/bitwarden-mxroute-web:latest
     ports:
       - "6124:6124"
     env_file: .env.example
     depends_on:
-      - mxroute-bitwarden-server
+      - bitwarden-mxroute-server
