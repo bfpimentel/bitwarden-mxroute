@@ -65,11 +65,28 @@ Configure Bitwarden's "Generator" Tab:
 
 1. Type: Forwarded email alias
 2. Service: Addy.io
-3. Email domain: The domain aliases will be created with. It doesn't need to be the same as the domain from `<alias_destination_email>` found in step 5.
+3. Email domain:
+    1. Since we are "hacking" the Addy.io API spec for this plugin to work, all the customization is done through this field. I'll be implementing a tool in the Web UI for more ease of use.
+    2. Available options (comma separated in the format `key=value`:
+        - *domain* (required)
+        - *destination* (required)
+        - *prefix*: string, default: none
+        - *suffix*: string, default: none
+        - *slug_length*: number, default: 2 (recommended to be kept at most 3)
+        - *slug_separator*: string, default: `_`
+        - *hex_length* number, default: 6
+        - *slug_separator*: string, default: `_` (in case you want to change how the words in the slug are separated)
+        - *alias_separator*: string, default: `_` (in case you want to change how the components of the alias are separated)
+        - *template*:
+           - Templating for now just have 2 components: `<slug>` and `<hex>`. The `prefix` and `suffix` options are not allowed, for self-explanatory reasons.
+               - `<slug>` is a human readable text, such as `great-grey-wolf`.
+               - `<hex>` is a random hex number, such as `4fb21c`.
+           - The format **needs** to contain the 'less-than' `(<)` and 'greater-than' `(>)` symbols. e.g. `<slug><hex>`
+        - e.g.
+            - User input: `domain=test.com,destination=hello@test.com,prefix=foo,suffix=bar,template=<slug><hex>,alias_separator=-`
+            - Generated alias: `foo-good_morning-8ed379-bar@test.com`
 4. API Key: The same that has been configured in the `SERVER_API_TOKEN` environment variable.
-5. Self-host server URL: 
-    1. `http://<server_address>/add/<alias_destination_email>`, e.g. `http://localhost:6123/add/custom@domain.com` (if host or port is kept at the defaults).
-    2. Replace `<alias_destination_email>` with the email you want to redirect your alias **to**.
+5. Self-host server URL: `http://<server_address>/add`
 6. Click the "Generate email" icon.
 
 Note: Sometimes cache can be an issue with extensions or the server. Remember to clean them if something goes wrong.
@@ -78,7 +95,9 @@ Note: Sometimes cache can be an issue with extensions or the server. Remember to
 
 ### Web App
 
-This repo provides a simple web app for listing and deleting aliases. By default, it's exposed on port `6124`.
+This repo provides a simple web app for listing and deleting aliases. 
+
+By default, it can be accessed through `http://localhost:6124`.
 
 The default docker-compose files contain an example for running it.
 
