@@ -2,6 +2,7 @@ name: Create and publish a Docker image
 on:
   push:
     branches: ['main']
+    tags: ['v*']
 env:
   REGISTRY: ghcr.io
   SERVER_IMAGE_NAME: ${{ github.repository }}-server
@@ -29,6 +30,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha
+            type=ref,event=tag
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -59,6 +61,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=sha
+            type=ref,event=tag
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
