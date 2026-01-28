@@ -44,8 +44,8 @@ def get_options(request_options) -> tuple[str, str, str]:
     domain = options.get("domain")
     destination = options.get("destination")
     if not domain or not destination:
-        raise requests.exceptions.InvalidJSONError(
-            f"The 'domain' and 'destination' options are required to be configured."
+        raise ValueError(
+            "The 'domain' and 'destination' options are required to be configured."
         )
 
     template = options.get("template", "<slug>")
@@ -62,10 +62,8 @@ def get_options(request_options) -> tuple[str, str, str]:
 
     alias_parts = []
     for index, part in enumerate(template_parts):
-        if not part in ALLOWED_TEMPLATE_PARTS:
-            raise requests.exceptions.InvalidJSONError(
-                f"Template part '{part}' is not allowed."
-            )
+        if part not in ALLOWED_TEMPLATE_PARTS:
+            raise ValueError(f"Template part '{part}' is not allowed.")
 
         match part:
             case "slug":
@@ -128,7 +126,7 @@ def add(subpath):
         response.raise_for_status()
 
         return {"data": {"email": f"{alias}@{domain}"}}
-    except requests.exceptions.InvalidJSONError as e:
+    except ValueError as e:
         return jsonify({"error": str(e)}), 412
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500

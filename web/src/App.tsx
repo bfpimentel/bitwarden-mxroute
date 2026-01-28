@@ -8,7 +8,6 @@ interface Forwarder {
   alias: string;
   destinations: string[];
   email: string;
-  [key: string]: any;
 }
 
 function App() {
@@ -18,9 +17,15 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   // Token state
-  const [storedToken, setStoredToken] = useState<string>(() => localStorage.getItem("mxroute_api_token") || "");
-  const [serverUrl, setServerUrl] = useState<string>(() => localStorage.getItem("mxroute_server_url") || "http://localhost:6123");
-  const [showTokenInput, setShowTokenInput] = useState(() => !localStorage.getItem("mxroute_api_token"));
+  const [storedToken, setStoredToken] = useState<string>(
+    () => localStorage.getItem("mxroute_api_token") || "",
+  );
+  const [serverUrl, setServerUrl] = useState<string>(
+    () => localStorage.getItem("mxroute_server_url") || "http://localhost:6123",
+  );
+  const [showTokenInput, setShowTokenInput] = useState(
+    () => !localStorage.getItem("mxroute_api_token"),
+  );
   const [showOptionsPopup, setShowOptionsPopup] = useState(false);
 
   const [creating, setCreating] = useState(false);
@@ -34,7 +39,9 @@ function App() {
   const [configError, setConfigError] = useState<string | null>(null);
 
   // Check if configuration has changed from saved values
-  const isDirty = serverUrl !== (localStorage.getItem("mxroute_server_url") || "") || storedToken !== (localStorage.getItem("mxroute_api_token") || "");
+  const isDirty =
+    serverUrl !== (localStorage.getItem("mxroute_server_url") || "") ||
+    storedToken !== (localStorage.getItem("mxroute_api_token") || "");
 
   useEffect(() => {
     setTestSuccess(false);
@@ -48,10 +55,10 @@ function App() {
       const baseUrl = serverUrl.replace(/\/$/, "");
       const res = await fetch(`${baseUrl}/`);
       if (!res.ok) throw new Error(`Status check failed: ${res.statusText}`);
-      await res.text(); 
+      await res.text();
       setTestSuccess(true);
-    } catch (e: any) {
-      setConfigError(e.message || "Failed to connect to server");
+    } catch (e) {
+      setConfigError((e as Error).message || "Failed to connect to server");
     } finally {
       setTestLoading(false);
     }
@@ -103,8 +110,11 @@ function App() {
       if (config.domain === domain) {
         fetchList();
       }
-    } catch (e: any) {
-      setCreateStatus({ type: "error", message: String(e.message || e) });
+    } catch (e) {
+      setCreateStatus({
+        type: "error",
+        message: String((e as Error).message || e),
+      });
     } finally {
       setCreating(false);
     }
@@ -240,15 +250,33 @@ function App() {
                     className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
-                    onClick={isDirty && !testSuccess ? handleTestConfig : handleSaveToken}
-                    disabled={(!isDirty && !testSuccess && serverUrl === "http://localhost:6123") || testLoading || (!isDirty)} 
+                    onClick={
+                      isDirty && !testSuccess
+                        ? handleTestConfig
+                        : handleSaveToken
+                    }
+                    disabled={
+                      (!isDirty &&
+                        !testSuccess &&
+                        serverUrl === "http://localhost:6123") ||
+                      testLoading ||
+                      !isDirty
+                    }
                     className={`px-6 py-2 rounded font-medium text-white transition-colors ${
-                       isDirty 
-                        ? (testSuccess ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700")
+                      isDirty
+                        ? testSuccess
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "bg-blue-600 hover:bg-blue-700"
                         : "bg-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {testLoading ? "Testing..." : (isDirty ? (testSuccess ? "Save" : "Test") : "Saved")}
+                    {testLoading
+                      ? "Testing..."
+                      : isDirty
+                        ? testSuccess
+                          ? "Save"
+                          : "Test"
+                        : "Saved"}
                   </button>
                 </div>
               </div>

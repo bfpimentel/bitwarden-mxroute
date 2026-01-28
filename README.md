@@ -25,6 +25,8 @@ I'm not responsible for any compromised data.
    MXROUTE_API_KEY=<control_pane_api_key>
 
    DEBUG=false # Optional for debugging the server
+
+   SERVER_ADDRESS=http://bitwarden-mxroute-server:6123 # Optional for web app
    ```
 
 ### Docker (recommended)
