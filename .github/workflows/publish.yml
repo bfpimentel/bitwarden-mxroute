@@ -70,3 +70,43 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+  build-and-push-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      - name: Set and Update Version
+        working-directory: ./web
+        run: |
+          git fetch --tags --force
+
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${LATEST_TAG#v}
+
+          npm version "$VERSION" --no-git-tag-version --allow-same-version --force
+
+          jq --arg v "$VERSION" '.version = $v | .version_name = $v' public/manifest.json > public/manifest.json.tmp && mv public/manifest.json.tmp public/manifest.json
+      - name: Install dependencies
+        working-directory: ./web
+        run: npm ci
+      - name: Build
+        working-directory: ./web
+        run: npm run build
+      - name: Package Extension
+        working-directory: ./web
+        run: |
+          cd dist
+          zip -r ../extension.zip .
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mxroute-bitwarden-extension
+          path: web/extension.zip

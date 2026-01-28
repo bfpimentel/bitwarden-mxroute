@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "MXRoute Bitwarden Helper",
+  "version": "0.0.0",
+  "description": "Helper extension for MXRoute Bitwarden Plugin",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "mxroute.png"
+  },
+  "icons": {
+    "16": "mxroute.png",
+    "48": "mxroute.png",
+    "128": "mxroute.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}

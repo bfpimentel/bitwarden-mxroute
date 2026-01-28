@@ -16,8 +16,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Token state
-  const [storedToken, setStoredToken] = useState<string>(
+  const [token, setToken] = useState<string>(
     () => localStorage.getItem("mxroute_api_token") || "",
   );
   const [serverUrl, setServerUrl] = useState<string>(
@@ -41,19 +40,36 @@ function App() {
   // Check if configuration has changed from saved values
   const isDirty =
     serverUrl !== (localStorage.getItem("mxroute_server_url") || "") ||
-    storedToken !== (localStorage.getItem("mxroute_api_token") || "");
+    token !== (localStorage.getItem("mxroute_api_token") || "");
 
   useEffect(() => {
     setTestSuccess(false);
     setConfigError(null);
-  }, [serverUrl, storedToken]);
+  }, [serverUrl, token]);
+
+  const handleSaveToken = () => {
+    localStorage.setItem("mxroute_api_token", token);
+    localStorage.setItem("mxroute_server_url", serverUrl);
+    setShowTokenInput(false);
+  };
+
+  const getHeaders = () => {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return headers;
+  };
 
   const handleTestConfig = async () => {
     setTestLoading(true);
     setConfigError(null);
+
     try {
       const baseUrl = serverUrl.replace(/\/$/, "");
-      const res = await fetch(`${baseUrl}/`);
+      const res = await fetch(`${baseUrl}/`, {
+        headers: getHeaders(),
+      });
       if (!res.ok) throw new Error(`Status check failed: ${res.statusText}`);
       await res.text();
       setTestSuccess(true);
@@ -62,12 +78,6 @@ function App() {
     } finally {
       setTestLoading(false);
     }
-  };
-
-  const handleSaveToken = () => {
-    localStorage.setItem("mxroute_api_token", storedToken);
-    localStorage.setItem("mxroute_server_url", serverUrl);
-    setShowTokenInput(false);
   };
 
   const handleCreateAlias = async () => {
@@ -88,14 +98,12 @@ function App() {
 
     setCreating(true);
     setCreateStatus(null);
+
     try {
       const baseUrl = serverUrl.replace(/\/$/, "");
       const res = await fetch(`${baseUrl}/add/dummy`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
-        },
+        headers: getHeaders(),
         body: JSON.stringify({ domain: optionsString }),
       });
 
@@ -118,14 +126,6 @@ function App() {
     } finally {
       setCreating(false);
     }
-  };
-
-  const getHeaders = () => {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
-    if (storedToken) headers["Authorization"] = `Bearer ${storedToken}`;
-    return headers;
   };
 
   const fetchList = async (e?: React.FormEvent) => {
@@ -245,8 +245,8 @@ function App() {
                   <input
                     type="password"
                     placeholder="Enter Server API Token"
-                    value={storedToken}
-                    onChange={(e) => setStoredToken(e.target.value)}
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
                     className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
