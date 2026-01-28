@@ -66,7 +66,7 @@ Configure Bitwarden's "Generator" Tab:
 1. Type: Forwarded email alias
 2. Service: Addy.io
 3. Email domain:
-    1. Since we are "hacking" the Addy.io API spec for this plugin to work, all the customization is done through this field. I'll be implementing a tool in the Web UI for more ease of use.
+    1. Since we are "hacking" the Addy.io API spec for this plugin to work, all the customization is done through this field. The Web UI has an options configurator for ease of use, although optional.
     2. Available options (comma separated in the format `key=value`:
         - *domain* (required)
         - *destination* (required)
