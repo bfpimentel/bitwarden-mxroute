@@ -105,3 +105,23 @@ This project includes a web interface for managing aliases and an API for direct
 - **List Aliases:** `GET /list/<domain>`
 - **Add Alias:** `POST /add`
 - **Delete Alias:** `DELETE /delete/<alias_email>`
+
+## Browser Extensions
+
+This project provides a helper browser extension (Chrome & Firefox) that allows you to easily generate option strings and manage your aliases without opening the full web app.
+
+1.  **Download:** Download the `mxroute-bitwarden-extension.zip` artifact from the latest [release](https://github.com/bfpimentel/bitwarden-mxroute/releases/latest) or from the latest [GitHub Actions run](https://github.com/bfpimentel/bitwarden-mxroute/actions).
+2.  **Unzip:** Extract the zip file to a folder.
+
+### Chrome / Edge / Brave
+
+1.  Go to `chrome://extensions/`.
+2.  Enable **Developer mode** (top right toggle).
+3.  Click **Load unpacked**.
+4.  Select the folder where you extracted the extension.
+
+### Firefox
+
+1.  Go to `about:debugging#/runtime/this-firefox`.
+2.  Click **Load Temporary Add-on...**.
+3.  Select the `manifest.json` file inside the extracted folder.
