@@ -1,10 +1,11 @@
 # MXRoute Bitwarden Alias Plugin
 
-This project intends to be a Bitwarden plugin specific to MXRoute API. 
+![Docker Image Version (latest semver)](https://img.shields.io/github/v/tag/bfpimentel/bitwarden-mxroute?label=latest&logo=github&style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/bfpimentel/bitwarden-mxroute?logo=github&style=flat-square)
 
-It works by creating a "fake" Addy.io server and route the calls to MXRoute.
+A Bitwarden plugin (via "Addy.io" integration) for MXRoute.
 
-Under the hood, it uses `coolname` to create the aliases.
+This service mimics the Addy.io API to allow Bitwarden to generate email aliases directly on your MXRoute domains. It uses `coolname` for human-readable aliases.
 
 ## ⚠️ Disclaimer
 
@@ -67,46 +68,40 @@ Configure Bitwarden's "Generator" Tab:
 2. Service: Addy.io
 3. Email domain:
     1. Since we are "hacking" the Addy.io API spec for this plugin to work, all the customization is done through this field. The Web UI has an options configurator for ease of use, although optional.
-    2. Available options (comma separated in the format `key=value`:
-        - *domain* (required)
-        - *destination* (required)
-        - *prefix*: string, default: none
-        - *suffix*: string, default: none
-        - *slug_length*: number, default: 2 (recommended to be kept at most 3)
-        - *slug_separator*: string, default: `_`
-        - *hex_length* number, default: 6
-        - *slug_separator*: string, default: `_` (in case you want to change how the words in the slug are separated)
-        - *alias_separator*: string, default: `_` (in case you want to change how the components of the alias are separated)
-        - *template*:
-           - Templating for now just have 2 components: `<slug>` and `<hex>`. The `prefix` and `suffix` options are not allowed, for self-explanatory reasons.
-               - `<slug>` is a human readable text, such as `great-grey-wolf`.
-               - `<hex>` is a random hex number, such as `4fb21c`.
-           - The format **needs** to contain the 'less-than' `(<)` and 'greater-than' `(>)` symbols. e.g. `<slug><hex>`
-        - e.g.
-            - User input: `domain=test.com,destination=hello@test.com,prefix=foo,suffix=bar,template=<slug><hex>,alias_separator=-`
-            - Generated alias: `foo-good_morning-8ed379-bar@test.com`
-4. API Key: The same that has been configured in the `SERVER_API_TOKEN` environment variable.
-5. Self-host server URL: `http://<server_address>/add`
-6. Click the "Generate email" icon.
+    2. Refer to the **Available Options** section below.
+4. **API Key:** Use the value of `SERVER_API_TOKEN`.
+5. **Self-host server URL:** `http://<server_address>:6123/add`
+6. Click the **"Generate email"** icon.
 
-Note: Sometimes cache can be an issue with extensions or the server. Remember to clean them if something goes wrong.
+### Available Options
 
-## Utilities
+Configure these in the "Email domain" field using `key=value` format, separated by commas.
 
-### Web App
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `domain` | String | yes | None | The domain to create the alias on. |
+| `destination` | String | yes | None | The destination email address. |
+| `template` | String | no | `<slug>` | Format template. Allowed: `<slug>`, `<hex>`. |
+| `prefix` | String | no | None | Prefix added to the alias. |
+| `suffix` | String | no | None | Suffix added to the alias. |
+| `hex_length` | Number | no | 6 | Length of the random hex string. |
+| `slug_length` | Number | no | 2 | Number of words in the slug. |
+| `slug_separator` | String | no | _ | Separator between slug words. |
+| `alias_separator` | String | no | _ | Separator between alias components. |
 
-This repo provides a simple web app for listing and deleting aliases. 
+**Example Input:**
+`domain=test.com,destination=hello@test.com,prefix=foo,template=<slug><hex>,alias_separator=-`
 
-By default, it can be accessed through `http://localhost:6124`.
+**Result:** `foo-good_morning-8ed379@test.com`
 
-The default docker-compose files contain an example for running it.
+> **Note:** If you encounter issues, try clearing the extension cache.
 
-It uses the server instead of directly interacting with MXRoute's API, so the server is a dependency, while the web app is just optional.
+## Web App & API
 
-### API
-- Status check
-    - `http://<server_address>/`
-- List aliases for given domain
-    - `http://<server_address>/list/<domain>`
-- Delete alias
-    - `http://<server_address>/delete/<alias_email>`
+This project includes a web interface for managing aliases and an API for direct access.
+
+- **Web App:** `http://localhost:6124` (default)
+- **API Status:** `GET /`
+- **List Aliases:** `GET /list/<domain>`
+- **Add Alias:** `POST /add`
+- **Delete Alias:** `DELETE /delete/<alias_email>`
