@@ -32,7 +32,7 @@ def build_request(domain):
     return mxroute_endpoint, mxroute_headers
 
 
-def get_options(request_options):
+def get_options(request_options) -> tuple[str, str, str]:
     options: Dict[str, str] = {}
     for option in request_options:
         if "=" in option:
@@ -47,15 +47,12 @@ def get_options(request_options):
         )
 
     template = options.get("template", "<slug>")
-    prefix = options.get("prefix") or ""
-    suffix = options.get("suffix") or ""
-    alias_separator = options.get("alias_separator") or "_"
-    slug_separator = options.get("slug_separator") or "_"
-    slug_length_str = options.get("slug_length") or ""
-    hex_length_str = options.get("hex_length") or ""
-
-    slug_length = 2 if slug_length_str == "" else int(slug_length_str)
-    hex_length = 6 if hex_length_str == "" else int(hex_length_str)
+    prefix = options.get("prefix", "")
+    suffix = options.get("suffix", "")
+    alias_separator = options.get("alias_separator", "_")
+    slug_separator = options.get("slug_separator", "_")
+    slug_length = int(options.get("slug_length", "2"))
+    hex_length = int(options.get("hex_length", "6"))
 
     template_parts = []
     for match in re.findall(r"<(.*?)>", template):
@@ -81,7 +78,7 @@ def get_options(request_options):
     if suffix != "":
         alias += f"{alias_separator}{suffix}"
 
-    return {"domain": domain, "destination": destination, "alias": alias}
+    return domain, destination, alias
 
 
 @app.before_request
@@ -114,20 +111,19 @@ def add(subpath):
     data = request.get_json().get("domain")
 
     try:
-        options = get_options(data.split(","))
-        print(options)
+        domain, destination, alias = get_options(data.split(","))
 
         body = {
-            "alias": options.get("alias"),
-            "destinations": [options.get("destination")],
+            "alias": alias,
+            "destinations": [destination],
         }
 
-        endpoint, headers = build_request(options.get("domain"))
+        endpoint, headers = build_request(domain)
 
         response = requests.post(endpoint, headers=headers, json=body)
         response.raise_for_status()
 
-        return {"data": {"email": f"{options.get('alias')}@{options.get('domain')}"}}
+        return {"data": {"email": f"{alias}@{domain}"}}
     except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
     except requests.exceptions.InvalidJSONError as e:
