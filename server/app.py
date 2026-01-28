@@ -69,9 +69,14 @@ def get_options(request_options) -> tuple[str, str, str]:
 
         match part:
             case "slug":
-                alias_parts.append(slug_separator.join(coolname.generate(slug_length)))
+                if slug_length == 1:
+                    alias_parts.append(coolname.generate(2)[0])
+                else:
+                    alias_parts.append(
+                        slug_separator.join(coolname.generate(slug_length))
+                    )
             case "hex":
-                alias_parts.append(secrets.token_hex(int(hex_length / 2)))
+                alias_parts.append(secrets.token_hex(hex_length)[:hex_length])
 
     alias = alias_separator.join(alias_parts)
 
