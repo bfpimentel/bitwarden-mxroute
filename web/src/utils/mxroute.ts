@@ -21,6 +21,7 @@ export const loadOptionsConfig = (): MxRouteConfig => {
 
 export const generateOptionsString = (config: MxRouteConfig): string => {
   const parts = [];
+
   if (config.domain) parts.push(`domain=${config.domain}`);
   if (config.destination) parts.push(`destination=${config.destination}`);
   if (config.template && config.template !== "<slug>")
@@ -38,3 +39,14 @@ export const generateOptionsString = (config: MxRouteConfig): string => {
 
   return parts.join(",");
 };
+
+export const generateStaticOptionsString = (staticAlias: string, config: MxRouteConfig): string => {
+  const parts = [];
+
+  if (config.domain) parts.push(`domain=${config.domain}`);
+  if (config.destination) parts.push(`destination=${config.destination}`);
+
+  parts.push(`static=${staticAlias}`);
+
+  return parts.join(",");
+}

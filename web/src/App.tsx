@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ForwarderItem } from "./components/ForwarderItem";
 import { OptionsPopup } from "./components/OptionsPopup";
 import { Settings, Sliders } from "lucide-react";
-import { loadOptionsConfig, generateOptionsString } from "./utils/mxroute";
+import { loadOptionsConfig, generateOptionsString, generateStaticOptionsString } from "./utils/mxroute";
 
 interface Forwarder {
   alias: string;
@@ -26,6 +26,7 @@ function App() {
     () => !localStorage.getItem("mxroute_api_token"),
   );
   const [showOptionsPopup, setShowOptionsPopup] = useState(false);
+  const [staticAlias, setStaticAlias] = useState("");
 
   const [creating, setCreating] = useState(false);
   const [createStatus, setCreateStatus] = useState<{
@@ -37,7 +38,6 @@ function App() {
   const [testSuccess, setTestSuccess] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
 
-  // Check if configuration has changed from saved values
   const isDirty =
     serverUrl !== (localStorage.getItem("mxroute_server_url") || "") ||
     token !== (localStorage.getItem("mxroute_api_token") || "");
@@ -82,6 +82,7 @@ function App() {
 
   const handleCreateAlias = async () => {
     const config = loadOptionsConfig();
+
     if (!serverUrl) {
       setCreateStatus({ type: "error", message: "Server URL not configured" });
       return;
@@ -114,10 +115,57 @@ function App() {
         type: "success",
         message: `Created: ${data.data.email}`,
       });
-      // Optionally refresh list if domain matches
-      if (config.domain === domain) {
-        fetchList();
-      }
+
+      if (config.domain === domain) fetchList();
+    } catch (e) {
+      setCreateStatus({
+        type: "error",
+        message: String((e as Error).message || e),
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCreateStaticAlias = async () => {
+    const config = loadOptionsConfig();
+
+    if (!serverUrl) {
+      setCreateStatus({ type: "error", message: "Server URL not configured" });
+      return;
+    }
+    if (!config.domain || !config.destination) {
+      setCreateStatus({
+        type: "error",
+        message: "Domain and destination must be configured in Options",
+      });
+      return;
+    }
+
+    const optionsString = generateStaticOptionsString(staticAlias, config);
+
+    setCreating(true);
+    setCreateStatus(null);
+
+    try {
+      const baseUrl = serverUrl.replace(/\/$/, "");
+      const res = await fetch(`${baseUrl}/add/dummy`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ domain: optionsString }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+
+      setCreateStatus({
+        type: "success",
+        message: `Created: ${data.data.email}`,
+      });
+
+      setStaticAlias("");
+
+      if (config.domain === domain) fetchList();
     } catch (e) {
       setCreateStatus({
         type: "error",
@@ -319,6 +367,29 @@ function App() {
             {creating ? "Creating..." : "Add Forwarder"}
           </button>
         </form>
+
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            Create Static Alias
+          </h2>
+          <div className="flex gap-4">
+            <input
+              type="text"
+              placeholder="Enter alias (e.g. my-service)"
+              value={staticAlias}
+              onChange={(e) => setStaticAlias(e.target.value)}
+              className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleCreateStaticAlias}
+              disabled={creating || !staticAlias}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-medium whitespace-nowrap"
+            >
+              {creating ? "Creating..." : "Create Alias"}
+            </button>
+          </div>
+        </div>
 
         {(createStatus || error) && (
           <div

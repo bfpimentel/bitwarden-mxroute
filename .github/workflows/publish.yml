@@ -77,12 +77,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
+          bun-version: latest
+          cache: 'bun'
+          cache-dependency-path: web/bun.lock
       - name: Set and Update Version
         working-directory: ./web
         run: |
@@ -91,15 +91,14 @@ jobs:
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           VERSION=${LATEST_TAG#v}
 
-          npm version "$VERSION" --no-git-tag-version --allow-same-version --force
-
+          jq --arg v "$VERSION" '.version = $v' package.json > package.json.tmp && mv package.json.tmp package.json
           jq --arg v "$VERSION" '.version = $v | .version_name = $v' public/manifest.json > public/manifest.json.tmp && mv public/manifest.json.tmp public/manifest.json
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: bun install --frozen-lockfile
       - name: Build
         working-directory: ./web
-        run: npm run build
+        run: bun run build
       - name: Package Extension
         working-directory: ./web
         run: |

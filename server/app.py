@@ -48,6 +48,7 @@ def get_options(request_options) -> tuple[str, str, str]:
             "The 'domain' and 'destination' options are required to be configured."
         )
 
+    static = options.get("static")
     template = options.get("template", "<slug>")
     prefix = options.get("prefix", "")
     suffix = options.get("suffix", "")
@@ -56,12 +57,15 @@ def get_options(request_options) -> tuple[str, str, str]:
     slug_length = int(options.get("slug_length", "2"))
     hex_length = int(options.get("hex_length", "6"))
 
+    if static:
+        return domain, destination, static
+
     template_parts = []
     for match in re.findall(r"<(.*?)>", template):
         template_parts.append(match)
 
     alias_parts = []
-    for index, part in enumerate(template_parts):
+    for _, part in enumerate(template_parts):
         if part not in ALLOWED_TEMPLATE_PARTS:
             raise ValueError(f"Template part '{part}' is not allowed.")
 

@@ -1,4 +1,6 @@
 __pycache__
 .venv
+
 .env.dev
 .env.prod
+.env

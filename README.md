@@ -41,24 +41,10 @@ The application will be running on `http://localhost:6123` by default.
 
 ### Manual
 
-1. Clone the repo
-2. Navigate to the `server` directory:
-   ```bash
-   cd server
-   ```
-3. Install python dependencies, e.g.:
-   ```bash
-   uv venv
-   uv pip install -r requirements.txt
-   source .venv/bin/activate
-   ```
-4. Run the server
-   ```bash
-   flask run --app app.py --host=0.0.0.0 --port=6123
+You'll need [overmind](https://github.com/DarthSim/overmind) installed.
 
-   # Or, when debugging
-   flask run --app app.py --host=0.0.0.0 --port=6123 --debug 
-   ```
+1. Clone the repo
+2. Run `overmind s` or `overmind s -D` (for running on background)
 
 ## How to use
 
@@ -67,11 +53,11 @@ Configure Bitwarden's "Generator" Tab:
 1. Type: Forwarded email alias
 2. Service: Addy.io
 3. Email domain:
-    1. Since we are "hacking" the Addy.io API spec for this plugin to work, all the customization is done through this field. The Web UI has an options configurator for ease of use, although optional.
-    2. Refer to the **Available Options** section below.
-4. **API Key:** Use the value of `SERVER_API_TOKEN`.
+    1. Since we are "hacking" the Addy.io API spec for this plugin to work, all the customization is done through this field. The Web UI has an options configurator for ease of use, although optional
+    2. Refer to the **Available Options** section below
+4. **API Key:** Use the value of `SERVER_API_TOKEN`
 5. **Self-host server URL:** `http://<server_address>:6123/add`
-6. Click the **"Generate email"** icon.
+6. Click the **"Generate email"** icon
 
 ### Available Options
 
@@ -110,18 +96,18 @@ This project includes a web interface for managing aliases and an API for direct
 
 This project provides a helper browser extension (Chrome & Firefox) that allows you to easily generate option strings and manage your aliases without opening the full web app.
 
-1.  **Download:** Download the `mxroute-bitwarden-extension.zip` artifact from the latest [release](https://github.com/bfpimentel/bitwarden-mxroute/releases/latest) or from the latest [GitHub Actions run](https://github.com/bfpimentel/bitwarden-mxroute/actions).
-2.  **Unzip:** Extract the zip file to a folder.
+1.  **Download:** Download the `mxroute-bitwarden-extension.zip` from the latest [GitHub Actions run](https://github.com/bfpimentel/bitwarden-mxroute/actions)
+2.  **Unzip:** Extract the zip file to a folder
 
 ### Chrome / Edge / Brave
 
-1.  Go to `chrome://extensions/`.
-2.  Enable **Developer mode** (top right toggle).
-3.  Click **Load unpacked**.
-4.  Select the folder where you extracted the extension.
+1.  Go to `chrome://extensions/`
+2.  Enable **Developer mode** (top right toggle)
+3.  Click **Load unpacked**
+4.  Select the folder where you extracted the extension
 
 ### Firefox
 
-1.  Go to `about:debugging#/runtime/this-firefox`.
-2.  Click **Load Temporary Add-on...**.
-3.  Select the `manifest.json` file inside the extracted folder.
+1.  Go to `about:debugging#/runtime/this-firefox`
+2.  Click **Load Temporary Add-on...**
+3.  Select the `manifest.json` file inside the extracted folder
