@@ -13,7 +13,7 @@ Although there's authentication to the app, diligence is needed when exposing th
 
 I'm not responsible for any compromised data.
 
-## Installation
+## Usage
 
 ### Environment Variables
 1. Configure the environment variables in a `.env` file or use them directly inside your `docker-compose.yml`:
@@ -28,23 +28,13 @@ I'm not responsible for any compromised data.
 
    SERVER_ADDRESS=http://bitwarden-mxroute-server:6123 # Optional for web app
    ```
-
-### Docker (recommended)
-
-1. Grab the example docker-compose file from [here](./docker-compose.yml).
-2. Start the service:
+2. Grab the example docker-compose file from [here](./docker-compose.yml).
+3. Start the service:
    ```bash
    docker-compose up -d
    ```
 
 The application will be running on `http://localhost:6123` by default.
-
-### Manual
-
-You'll need [overmind](https://github.com/DarthSim/overmind) installed.
-
-1. Clone the repo
-2. Run `overmind s` or `overmind s -D` (for running on background)
 
 ## How to use
 
@@ -99,7 +89,7 @@ This project provides a helper browser extension (Chrome & Firefox) that allows 
 1.  **Download:** Download the `mxroute-bitwarden-extension.zip` from the latest [GitHub Actions run](https://github.com/bfpimentel/bitwarden-mxroute/actions)
 2.  **Unzip:** Extract the zip file to a folder
 
-### Chrome / Edge / Brave
+### Chromium Browsers
 
 1.  Go to `chrome://extensions/`
 2.  Enable **Developer mode** (top right toggle)
@@ -111,3 +101,10 @@ This project provides a helper browser extension (Chrome & Firefox) that allows 
 1.  Go to `about:debugging#/runtime/this-firefox`
 2.  Click **Load Temporary Add-on...**
 3.  Select the `manifest.json` file inside the extracted folder
+
+## Development
+
+The only method that I support right now is using a Nix shell.
+
+1. Enter the development shell: `nix develop`
+2. Run services: `process-compose up`

@@ -1,0 +1,12 @@
+version: '0.5'
+processes:
+  server:
+    working_dir: "server"
+    command: 'uv run flask run --host=0.0.0.0 --port=6123 --debug'
+    availability:
+      restart: 'always'
+  web:
+    working_dir: "web"
+    command: 'bun run dev'
+    availability:
+      restart: 'always'

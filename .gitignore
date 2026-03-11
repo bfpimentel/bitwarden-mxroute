@@ -4,3 +4,5 @@ __pycache__
 .env.dev
 .env.prod
 .env
+
+.direnv
