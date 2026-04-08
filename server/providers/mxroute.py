@@ -53,7 +53,7 @@ class MXRouteProvider(Provider):
             response = requests.delete(f"{endpoint}/{alias}", headers=headers)
             response.raise_for_status()
 
-            return jsonify({"message": "Deleted."}), response.status_code
+            return jsonify({"message": f"{email} deleted."}), response.status_code
         except requests.exceptions.RequestException as e:
             return jsonify({"error": str(e)}), 500
 

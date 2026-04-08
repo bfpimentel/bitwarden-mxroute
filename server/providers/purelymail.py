@@ -31,37 +31,32 @@ class PurelymailProvider(Provider):
             return jsonify({"error": str(e)}), 500
 
     def get(self, domain):
-        endpoint, headers = self._build_request("v0/listRoutingRules")
-
         try:
-            response = requests.post(endpoint, headers=headers, json={})
-            response.raise_for_status()
-
-            data = response.json()["result"]["rules"]
-
-            result = [
-                {
-                    "email": alias["domainName"],
-                    "destinations": alias["targetAddresses"],
-                }
-                for alias in data
-                if alias["domainName"] == domain
-            ]
-
+            result = self._get_list(domain)
             return jsonify(result), response.status_code
         except requests.exceptions.RequestException as e:
             return jsonify({"error": str(e)}), 500
 
     def delete(self, email):
         try:
-            alias, domain = email.split("@")
+            _, domain = email.split("@")
         except ValueError:
             return jsonify({"error": "Invalid email format."}), 400
 
-        endpoint, headers = self._build_request(domain)
+        endpoint, headers = self._build_request("v0/deleteRoutingRule")
 
         try:
-            return jsonify({"error": "Not implemented yet"}), 404
+            existing_aliases = self._get_list(domain)
+            id_for_deletion = next(
+                (alias for alias in existing_aliases if alias["email"] == email), None
+            )
+
+            response = requests.post(
+                endpoint, headers=headers, json={"routingRuleId": id_for_deletion}
+            )
+            response.raise_for_status()
+
+            return jsonify({"message": f"{email} deleted."}), response.status_code
         except requests.exceptions.RequestException as e:
             return jsonify({"error": str(e)}), 500
 
@@ -73,3 +68,23 @@ class PurelymailProvider(Provider):
         }
 
         return endpoint, headers
+
+    def _get_list(self, domain):
+        endpoint, headers = self._build_request("v0/listRoutingRules")
+
+        response = requests.post(endpoint, headers=headers, json={})
+        response.raise_for_status()
+
+        data = response.json()["result"]["rules"]
+
+        result = [
+            {
+                "id": alias["id"],
+                "email": f"{alias['matchUser']}@{alias['domainName']}",
+                "destinations": alias["targetAddresses"],
+            }
+            for alias in data
+            if alias["domainName"] == domain
+        ]
+
+        return result
