@@ -9,6 +9,7 @@ from typing import Dict
 
 from providers.mxroute import MXRouteProvider
 from providers.provider import Provider
+from providers.purelymail import PurelymailProvider
 
 load_dotenv()
 
@@ -101,17 +102,17 @@ def status():
 def add(subpath):
     data = request.get_json().get("domain")
     domain, destination, alias = get_options(data.split(","))
-    provider.add(domain, destination, alias)
+    return provider.add(domain, destination, alias)
 
 
 @app.route("/list/<domain>", methods=["GET"])
 def get(domain):
-    provider.get(domain)
+    return provider.get(domain)
 
 
 @app.route("/delete/<email>", methods=["DELETE"])
 def delete(email):
-    provider.delete(email)
+    return provider.delete(email)
 
 
 if __name__ == "__main__":
@@ -123,7 +124,7 @@ if __name__ == "__main__":
                 api_key=os.getenv("MXROUTE_API_KEY"),
             )
         case "purelymail":
-            provider = MXRouteProvider(
+            provider = PurelymailProvider(
                 api_key=os.getenv("PURELYMAIL_API_KEY"),
             )
         case _:

@@ -1,13 +1,15 @@
 import requests
+import json
 
+from flask import jsonify
 from providers.provider import Provider
 
 
 class PurelymailProvider(Provider):
-    def __init__(self, server, username, api_key):
+    def __init__(self, api_key):
         self.api_key = api_key
 
-    def add(domain, destination, alias):
+    def add(self, domain, destination, alias):
         try:
             body = {
                 "domainName": domain,
@@ -17,7 +19,7 @@ class PurelymailProvider(Provider):
                 "catchall": False,
             }
 
-            endpoint, headers = _build_request("/v0/createRoutingRule")
+            endpoint, headers = self._build_request("v0/createRoutingRule")
 
             response = requests.post(endpoint, headers=headers, json=body)
             response.raise_for_status()
@@ -28,28 +30,42 @@ class PurelymailProvider(Provider):
         except requests.exceptions.RequestException as e:
             return jsonify({"error": str(e)}), 500
 
-    def get(domain):
-        endpoint, headers = _build_request(domain)
+    def get(self, domain):
+        endpoint, headers = self._build_request("v0/listRoutingRules")
 
         try:
-            return jsonify({"error": "Not implemented yet"}), 404
+            response = requests.post(endpoint, headers=headers, json={})
+            response.raise_for_status()
+
+            data = response.json()["result"]["rules"]
+
+            result = [
+                {
+                    "email": alias["domainName"],
+                    "destinations": alias["targetAddresses"],
+                }
+                for alias in data
+                if alias["domainName"] == domain
+            ]
+
+            return jsonify(result), response.status_code
         except requests.exceptions.RequestException as e:
             return jsonify({"error": str(e)}), 500
 
-    def delete(email):
+    def delete(self, email):
         try:
             alias, domain = email.split("@")
         except ValueError:
             return jsonify({"error": "Invalid email format."}), 400
 
-        endpoint, headers = _build_request(domain)
+        endpoint, headers = self._build_request(domain)
 
         try:
             return jsonify({"error": "Not implemented yet"}), 404
         except requests.exceptions.RequestException as e:
             return jsonify({"error": str(e)}), 500
 
-    def _build_request(path):
+    def _build_request(self, path):
         endpoint = f"https://purelymail.com/api/{path}"
         headers = {
             "Purelymail-Api-Token": self.api_key,
