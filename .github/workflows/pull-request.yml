@@ -14,15 +14,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: server/uv.lock
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest ruff
+        run: uv sync --locked
       - name: Lint with Ruff
-        run: ruff check .
-      - name: Test with pytest
-        run: pytest
+        run: uv run --with ruff ruff check .
   web-check:
     runs-on: ubuntu-latest
     defaults:
