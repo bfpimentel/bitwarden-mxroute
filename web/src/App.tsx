@@ -1,241 +1,38 @@
-import { useState, useEffect } from "react";
 import { ForwarderItem } from "./components/ForwarderItem";
 import { OptionsPopup } from "./components/OptionsPopup";
 import { Settings, Sliders } from "lucide-react";
-import {
-  loadOptionsConfig,
-  generateOptionsString,
-  generateStaticOptionsString,
-} from "./utils/alias";
-
-interface Forwarder {
-  alias: string;
-  destinations: string[];
-  email: string;
-}
+import { useAppStore } from "./stores/appStore";
 
 function App() {
-  const [domain, setDomain] = useState("");
-  const [forwarders, setForwarders] = useState<Forwarder[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [token, setToken] = useState<string>(
-    () => localStorage.getItem("bitwarden_alias_server_api_token") || "",
-  );
-  const [serverUrl, setServerUrl] = useState<string>(
-    () => localStorage.getItem("bitwarden_alias_server_server_url") || "http://localhost:6123",
-  );
-  const [showTokenInput, setShowTokenInput] = useState(
-    () => !localStorage.getItem("bitwarden_alias_server_api_token"),
-  );
-  const [showOptionsPopup, setShowOptionsPopup] = useState(false);
-  const [staticAlias, setStaticAlias] = useState("");
-
-  const [creating, setCreating] = useState(false);
-  const [createStatus, setCreateStatus] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
-
-  const [testLoading, setTestLoading] = useState(false);
-  const [testSuccess, setTestSuccess] = useState(false);
-  const [configError, setConfigError] = useState<string | null>(null);
-
-  const isDirty =
-    serverUrl !== (localStorage.getItem("bitwarden_alias_server_url") || "") ||
-    token !== (localStorage.getItem("bitwarden_alias_server_api_token") || "");
-
-  useEffect(() => {
-    setTestSuccess(false);
-    setConfigError(null);
-  }, [serverUrl, token]);
-
-  const handleSaveToken = () => {
-    localStorage.setItem("bitwarden_alias_server_api_token", token);
-    localStorage.setItem("bitwarden_alias_server_url", serverUrl);
-    setShowTokenInput(false);
-  };
-
-  const getHeaders = () => {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    return headers;
-  };
-
-  const handleTestConfig = async () => {
-    setTestLoading(true);
-    setConfigError(null);
-
-    try {
-      const baseUrl = serverUrl.replace(/\/$/, "");
-      const res = await fetch(`${baseUrl}/`, {
-        headers: getHeaders(),
-      });
-      if (!res.ok) throw new Error(`Status check failed: ${res.statusText}`);
-      await res.text();
-      setTestSuccess(true);
-    } catch (e) {
-      setConfigError((e as Error).message || "Failed to connect to server");
-    } finally {
-      setTestLoading(false);
-    }
-  };
-
-  const handleCreateAlias = async () => {
-    const config = loadOptionsConfig();
-
-    if (!serverUrl) {
-      setCreateStatus({ type: "error", message: "Server URL not configured" });
-      return;
-    }
-    if (!config.domain || !config.destination) {
-      setCreateStatus({
-        type: "error",
-        message: "Domain and Destination must be configured in Options",
-      });
-      return;
-    }
-
-    const optionsString = generateOptionsString(config);
-
-    setCreating(true);
-    setCreateStatus(null);
-
-    try {
-      const baseUrl = serverUrl.replace(/\/$/, "");
-      const res = await fetch(`${baseUrl}/add/dummy`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ domain: optionsString }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || res.statusText);
-
-      setCreateStatus({
-        type: "success",
-        message: `Created: ${data.data.email}`,
-      });
-
-      if (config.domain === domain) fetchList();
-    } catch (e) {
-      setCreateStatus({
-        type: "error",
-        message: String((e as Error).message || e),
-      });
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleCreateStaticAlias = async () => {
-    const config = loadOptionsConfig();
-
-    if (!serverUrl) {
-      setCreateStatus({ type: "error", message: "Server URL not configured" });
-      return;
-    }
-    if (!config.domain || !config.destination) {
-      setCreateStatus({
-        type: "error",
-        message: "Domain and destination must be configured in Options",
-      });
-      return;
-    }
-
-    const optionsString = generateStaticOptionsString(staticAlias, config);
-
-    setCreating(true);
-    setCreateStatus(null);
-
-    try {
-      const baseUrl = serverUrl.replace(/\/$/, "");
-      const res = await fetch(`${baseUrl}/add/dummy`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ domain: optionsString }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || res.statusText);
-
-      setCreateStatus({
-        type: "success",
-        message: `Created: ${data.data.email}`,
-      });
-
-      setStaticAlias("");
-
-      if (config.domain === domain) fetchList();
-    } catch (e) {
-      setCreateStatus({
-        type: "error",
-        message: String((e as Error).message || e),
-      });
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const fetchList = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!domain) return;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${serverUrl}/list/${domain}`, {
-        headers: getHeaders(),
-      });
-      if (!res.ok) {
-        if (res.status === 401) throw new Error("Unauthorized: Invalid API Token");
-        throw new Error(`Error: ${res.statusText}`);
-      }
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setForwarders(data);
-      } else {
-        console.warn("Received non-array data:", data);
-        setForwarders([]);
-        setError("Received unexpected data format");
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err));
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (email: string) => {
-    if (!confirm(`Are you sure you want to delete ${email}?`)) return;
-
-    try {
-      const res = await fetch(`${serverUrl}/delete/${encodeURIComponent(email)}`, {
-        method: "DELETE",
-        headers: getHeaders(),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || res.statusText);
-      }
-
-      setForwarders((prev) => prev.filter((item) => item.email !== email));
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        alert(`Failed to delete: ${err.message}`);
-      } else {
-        alert("Failed to delete");
-      }
-    }
-  };
+  const {
+    domain,
+    forwarders,
+    loading,
+    error,
+    showOptionsPopup,
+    staticAlias,
+    creating,
+    createStatus,
+    testLoading,
+    testSuccess,
+    configError,
+    token,
+    serverUrl,
+    showTokenInput,
+    isDirty,
+    setDomain,
+    setShowOptionsPopup,
+    setStaticAlias,
+    setToken,
+    setServerUrl,
+    toggleTokenInput,
+    saveConfig,
+    testConfig,
+    createAlias,
+    createStaticAlias,
+    fetchList,
+    deleteForwarder,
+  } = useAppStore();
 
   return (
     <div className="min-h-screen w-full bg-black text-white p-4 sm:p-6 md:p-8">
@@ -257,7 +54,7 @@ function App() {
               <Sliders className="w-5 h-5" />
             </button>
             <button
-              onClick={() => setShowTokenInput(!showTokenInput)}
+              onClick={toggleTokenInput}
               className="p-2 border-2 border-white hover:bg-white hover:text-black transition-colors"
               title="API Settings"
             >
@@ -266,15 +63,22 @@ function App() {
           </div>
         </div>
 
-        <OptionsPopup isOpen={showOptionsPopup} onClose={() => setShowOptionsPopup(false)} />
+        <OptionsPopup
+          isOpen={showOptionsPopup}
+          onClose={() => setShowOptionsPopup(false)}
+        />
 
         {/* API Configuration */}
         {showTokenInput && (
           <div className="mb-8 border-2 border-white p-4">
-            <h2 className="text-lg font-bold uppercase mb-4">API Configuration</h2>
+            <h2 className="text-lg font-bold uppercase mb-4">
+              API Configuration
+            </h2>
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-bold mb-1 uppercase">Server URL</label>
+                <label className="block text-sm font-bold mb-1 uppercase">
+                  Server URL
+                </label>
                 <input
                   type="text"
                   placeholder="http://localhost:6123"
@@ -284,7 +88,9 @@ function App() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-1 uppercase">Server API Token</label>
+                <label className="block text-sm font-bold mb-1 uppercase">
+                  Server API Token
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="password"
@@ -294,9 +100,15 @@ function App() {
                     className="flex-1 p-2 border-2 border-white bg-black text-white focus:bg-white focus:text-black transition-colors"
                   />
                   <button
-                    onClick={isDirty && !testSuccess ? handleTestConfig : handleSaveToken}
+                    onClick={
+                      isDirty && !testSuccess
+                        ? () => void testConfig()
+                        : saveConfig
+                    }
                     disabled={
-                      (!isDirty && !testSuccess && serverUrl === "http://localhost:6123") ||
+                      (!isDirty &&
+                        !testSuccess &&
+                        serverUrl === "http://localhost:6123") ||
                       testLoading ||
                       !isDirty
                     }
@@ -331,7 +143,13 @@ function App() {
         )}
 
         {/* Domain Form */}
-        <form onSubmit={fetchList} className="mb-8 border-2 border-white p-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void fetchList();
+          }}
+          className="mb-8 border-2 border-white p-4"
+        >
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
@@ -350,7 +168,7 @@ function App() {
               </button>
               <button
                 type="button"
-                onClick={handleCreateAlias}
+                onClick={() => void createAlias()}
                 disabled={creating}
                 className="px-4 py-2 border-2 border-white font-bold uppercase hover:bg-white hover:text-black disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700 transition-colors whitespace-nowrap"
               >
@@ -362,7 +180,9 @@ function App() {
 
         {/* Create Static Alias */}
         <div className="mb-8 border-2 border-white p-4">
-          <h2 className="text-lg font-bold uppercase mb-4">Create Static Alias</h2>
+          <h2 className="text-lg font-bold uppercase mb-4">
+            Create Static Alias
+          </h2>
           <div className="flex flex-col sm:flex-row gap-4">
             <input
               type="text"
@@ -373,7 +193,7 @@ function App() {
             />
             <button
               type="button"
-              onClick={handleCreateStaticAlias}
+              onClick={() => void createStaticAlias()}
               disabled={creating || !staticAlias}
               className="px-4 py-2 border-2 border-white font-bold uppercase hover:bg-white hover:text-black disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700 transition-colors whitespace-nowrap"
             >
@@ -386,7 +206,9 @@ function App() {
         {(createStatus || error) && (
           <div
             className={`border-2 border-white px-4 py-3 mb-6 font-bold uppercase ${
-              createStatus?.type === "success" ? "bg-white text-black" : "bg-black text-white"
+              createStatus?.type === "success"
+                ? "bg-white text-black"
+                : "bg-black text-white"
             }`}
           >
             {createStatus ? createStatus.message : error}
@@ -409,7 +231,7 @@ function App() {
                   key={item.email || idx}
                   email={item.email}
                   destinations={item.destinations}
-                  onDelete={handleDelete}
+                  onDelete={deleteForwarder}
                 />
               ))}
             </div>
