@@ -7,6 +7,7 @@ import {
   generateOptionsString,
   generateStaticOptionsString,
 } from "./utils/alias";
+import { SERVER_URL_STORAGE_KEY, TOKEN_STORAGE_KEY } from "./utils/constants";
 
 interface Forwarder {
   alias: string;
@@ -19,32 +20,30 @@ function App() {
   const [forwarders, setForwarders] = useState<Forwarder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [token, setToken] = useState<string>(
-    () => localStorage.getItem("bitwarden_alias_server_api_token") || "",
-  );
-  const [serverUrl, setServerUrl] = useState<string>(
-    () => localStorage.getItem("bitwarden_alias_server_server_url") || "http://localhost:6123",
-  );
-  const [showTokenInput, setShowTokenInput] = useState(
-    () => !localStorage.getItem("bitwarden_alias_server_api_token"),
-  );
   const [showOptionsPopup, setShowOptionsPopup] = useState(false);
   const [staticAlias, setStaticAlias] = useState("");
-
   const [creating, setCreating] = useState(false);
   const [createStatus, setCreateStatus] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
-
   const [testLoading, setTestLoading] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
+  const [token, setToken] = useState<string>(
+    () => localStorage.getItem(TOKEN_STORAGE_KEY) || "",
+  );
+  const [serverUrl, setServerUrl] = useState<string>(
+    () =>
+      localStorage.getItem(SERVER_URL_STORAGE_KEY) || "http://localhost:6123",
+  );
+  const [showTokenInput, setShowTokenInput] = useState(
+    () => !localStorage.getItem(TOKEN_STORAGE_KEY),
+  );
 
   const isDirty =
-    serverUrl !== (localStorage.getItem("bitwarden_alias_server_url") || "") ||
-    token !== (localStorage.getItem("bitwarden_alias_server_api_token") || "");
+    serverUrl !== (localStorage.getItem(SERVER_URL_STORAGE_KEY) || "") ||
+    token !== (localStorage.getItem(TOKEN_STORAGE_KEY) || "");
 
   useEffect(() => {
     setTestSuccess(false);
@@ -52,8 +51,8 @@ function App() {
   }, [serverUrl, token]);
 
   const handleSaveToken = () => {
-    localStorage.setItem("bitwarden_alias_server_api_token", token);
-    localStorage.setItem("bitwarden_alias_server_url", serverUrl);
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(SERVER_URL_STORAGE_KEY, serverUrl);
     setShowTokenInput(false);
   };
 
@@ -191,7 +190,8 @@ function App() {
         headers: getHeaders(),
       });
       if (!res.ok) {
-        if (res.status === 401) throw new Error("Unauthorized: Invalid API Token");
+        if (res.status === 401)
+          throw new Error("Unauthorized: Invalid API Token");
         throw new Error(`Error: ${res.statusText}`);
       }
       const data = await res.json();
@@ -217,10 +217,13 @@ function App() {
     if (!confirm(`Are you sure you want to delete ${email}?`)) return;
 
     try {
-      const res = await fetch(`${serverUrl}/delete/${encodeURIComponent(email)}`, {
-        method: "DELETE",
-        headers: getHeaders(),
-      });
+      const res = await fetch(
+        `${serverUrl}/delete/${encodeURIComponent(email)}`,
+        {
+          method: "DELETE",
+          headers: getHeaders(),
+        },
+      );
 
       if (!res.ok) {
         const data = await res.json();
@@ -266,15 +269,22 @@ function App() {
           </div>
         </div>
 
-        <OptionsPopup isOpen={showOptionsPopup} onClose={() => setShowOptionsPopup(false)} />
+        <OptionsPopup
+          isOpen={showOptionsPopup}
+          onClose={() => setShowOptionsPopup(false)}
+        />
 
         {/* API Configuration */}
         {showTokenInput && (
           <div className="mb-8 border-2 border-white p-4">
-            <h2 className="text-lg font-bold uppercase mb-4">API Configuration</h2>
+            <h2 className="text-lg font-bold uppercase mb-4">
+              API Configuration
+            </h2>
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-bold mb-1 uppercase">Server URL</label>
+                <label className="block text-sm font-bold mb-1 uppercase">
+                  Server URL
+                </label>
                 <input
                   type="text"
                   placeholder="http://localhost:6123"
@@ -284,7 +294,9 @@ function App() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-1 uppercase">Server API Token</label>
+                <label className="block text-sm font-bold mb-1 uppercase">
+                  Server API Token
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="password"
@@ -294,9 +306,15 @@ function App() {
                     className="flex-1 p-2 border-2 border-white bg-black text-white focus:bg-white focus:text-black transition-colors"
                   />
                   <button
-                    onClick={isDirty && !testSuccess ? handleTestConfig : handleSaveToken}
+                    onClick={
+                      isDirty && !testSuccess
+                        ? handleTestConfig
+                        : handleSaveToken
+                    }
                     disabled={
-                      (!isDirty && !testSuccess && serverUrl === "http://localhost:6123") ||
+                      (!isDirty &&
+                        !testSuccess &&
+                        serverUrl === "http://localhost:6123") ||
                       testLoading ||
                       !isDirty
                     }
@@ -362,7 +380,9 @@ function App() {
 
         {/* Create Static Alias */}
         <div className="mb-8 border-2 border-white p-4">
-          <h2 className="text-lg font-bold uppercase mb-4">Create Static Alias</h2>
+          <h2 className="text-lg font-bold uppercase mb-4">
+            Create Static Alias
+          </h2>
           <div className="flex flex-col sm:flex-row gap-4">
             <input
               type="text"
@@ -386,7 +406,9 @@ function App() {
         {(createStatus || error) && (
           <div
             className={`border-2 border-white px-4 py-3 mb-6 font-bold uppercase ${
-              createStatus?.type === "success" ? "bg-white text-black" : "bg-black text-white"
+              createStatus?.type === "success"
+                ? "bg-white text-black"
+                : "bg-black text-white"
             }`}
           >
             {createStatus ? createStatus.message : error}
